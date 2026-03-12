@@ -1,0 +1,10 @@
+<ul>
+  @for (item of navItems; track item.route) {
+    <li routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.exact }">
+      <a
+        [routerLink]="item.route">
+        {{ item.label }}
+      </a>
+    </li>
+  }
+</ul>
