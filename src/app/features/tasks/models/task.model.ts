@@ -11,12 +11,12 @@ export enum TaskPriority {
 }
 
 export interface Task {
-  id: number;
+  id?: number;
   title: string;
   description: string;
   status: TaskStatus;
   priority: TaskPriority;
   dueDate: string;
   createdAt: string;
-  assignedTo: string;
+  assignedTo: number;
 }

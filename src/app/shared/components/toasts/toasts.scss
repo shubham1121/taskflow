@@ -1,0 +1,81 @@
+.toast {
+  &.alert-success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+
+    .toast-header {
+      background-color: #c3e6cb;
+      border-bottom: 1px solid #b1dfbb;
+      color: #155724;
+
+      strong {
+        color: #155724;
+      }
+    }
+
+    .toast-body {
+      color: #155724;
+    }
+  }
+
+  &.alert-danger {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+
+    .toast-header {
+      background-color: #f5c6cb;
+      border-bottom: 1px solid #f1b0b7;
+      color: #721c24;
+
+      strong {
+        color: #721c24;
+      }
+    }
+
+    .toast-body {
+      color: #721c24;
+    }
+  }
+
+  &.alert-warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    color: #856404;
+
+    .toast-header {
+      background-color: #ffeeba;
+      border-bottom: 1px solid #ffe69c;
+      color: #856404;
+
+      strong {
+        color: #856404;
+      }
+    }
+
+    .toast-body {
+      color: #856404;
+    }
+  }
+
+  &.alert-info {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+
+    .toast-header {
+      background-color: #bee5eb;
+      border-bottom: 1px solid #abdde5;
+      color: #0c5460;
+
+      strong {
+        color: #0c5460;
+      }
+    }
+
+    .toast-body {
+      color: #0c5460;
+    }
+  }
+}

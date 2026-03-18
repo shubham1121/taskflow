@@ -1,1 +1,37 @@
-<p>dashboard works!</p>
+<div class="container-fluid">
+  <h1 class="mb-5">Dashboard</h1>
+  
+  <div class="row">
+    <!-- Task Status Chart -->
+    <div class="col-lg-6 mb-4">
+      <div class="card shadow-sm" style="height: 100%;">
+        <div class="card-body" style="height: 350px; display: flex; align-items: center;">
+          <canvas 
+            baseChart 
+            [type]="chartType"
+            [data]="statusChartData" 
+            [options]="statusChartOptions"
+            width="400"
+            height="300">
+          </canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task Priority Chart -->
+    <div class="col-lg-6 mb-4">
+      <div class="card shadow-sm" style="height: 100%;">
+        <div class="card-body" style="height: 350px; display: flex; align-items: center;">
+          <canvas 
+            baseChart 
+            [type]="chartType"
+            [data]="priorityChartData" 
+            [options]="priorityChartOptions"
+            width="400"
+            height="300">
+          </canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

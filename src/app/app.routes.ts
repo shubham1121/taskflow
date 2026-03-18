@@ -20,6 +20,13 @@ export const routes: Routes = [
                     return import('./features/tasks/tasks.routes').
                         then(m => m.TASKS_ROUTES);
                 }
+            },
+            {
+                path: 'users',
+                loadChildren: () => {
+                    return import('./features/users/users.routes').
+                        then(m => m.USERS_ROUTES);
+                }
             }
         ]
     }

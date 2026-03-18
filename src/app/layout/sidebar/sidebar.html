@@ -1,10 +1,42 @@
-<ul>
-  @for (item of navItems; track item.route) {
-    <li routerLinkActive="active" [routerLinkActiveOptions]="{ exact: item.exact }">
-      <a
-        [routerLink]="item.route">
-        {{ item.label }}
-      </a>
-    </li>
-  }
-</ul>
+<div class="sidebar-wrapper" [class.collapsed]="isCollapsed$ | async">
+  <!-- Sidebar Header with Toggle Button -->
+  <div class="sidebar-header">
+    <button 
+      class="btn btn-primary sidebar-toggle"
+      type="button"
+      (click)="toggleSidebar()"
+      aria-label="Toggle sidebar">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+    <span class="app-name">TaskFlow</span>
+  </div>
+
+  <!-- Sidebar Navigation -->
+  <nav class="sidebar-nav">
+    <ul class="list-unstyled">
+      @for (item of navItems; track item.route) {
+        <li>
+          <a
+            [routerLink]="item.route"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: item.exact }"
+            class="nav-link"
+            [title]="item.label"
+            (click)="closeSidebarOnMobile()">
+            <span class="nav-icon" [innerHTML]="item.svgIcon"></span>
+            <span class="nav-label">{{ item.label }}</span>
+          </a>
+        </li>
+      }
+    </ul>
+  </nav>
+
+  <!-- Sidebar Footer -->
+  <div class="sidebar-footer">
+    <small class="text-muted">© 2026 TaskFlow</small>
+  </div>
+</div>

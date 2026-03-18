@@ -1,1 +1,125 @@
-<p>users-list works!</p>
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Users</h1>
+    <button class="btn btn-primary" (click)="openAddUserModal()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.5rem; vertical-align: middle;">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      Add User
+    </button>
+  </div>
+  
+  <div class="table-responsive">
+    <table class="table table-striped table-hover align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th class="text-center">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of users; track user.id) {
+          <tr>
+            <td class="fw-medium">{{ user.name }}</td>
+            <td>{{ user.email }}</td>
+            <td class="text-center">
+              <button 
+                class="btn btn-sm btn-danger"
+                (click)="openDeleteModal(user.id!)"
+                title="Delete user">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+@if (isDeleteModalOpen) {
+  <div class="modal d-block" tabindex="-1" role="dialog" style="background-color: rgba(0, 0, 0, 0.5);">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Confirm Delete</h5>
+          <button type="button" class="btn-close" (click)="cancelDelete()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to delete this user? This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="cancelDelete()">Cancel</button>
+          <button type="button" class="btn btn-danger" (click)="confirmDelete()">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Add User Modal -->
+@if (isAddUserModalOpen) {
+  <div class="modal d-block" tabindex="-1" role="dialog" style="background-color: rgba(0, 0, 0, 0.5);">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add New User</h5>
+          <button type="button" class="btn-close" (click)="cancelAddUser()" aria-label="Close"></button>
+        </div>
+        <form [formGroup]="addUserForm">
+          <div class="modal-body">
+            <!-- Name Field -->
+            <div class="mb-3">
+              <label for="userName" class="form-label">Name</label>
+              <input 
+                type="text" 
+                id="userName"
+                class="form-control" 
+                formControlName="name"
+                [class.is-invalid]="addUserForm.get('name')?.invalid && addUserForm.get('name')?.touched">
+              @if (addUserForm.get('name')?.invalid && addUserForm.get('name')?.touched) {
+                @if (addUserForm.get('name')?.errors?.['required']) {
+                  <div class="invalid-feedback d-block" style="color: #dc3545;">Name is required</div>
+                }
+                @if (addUserForm.get('name')?.errors?.['minlength']) {
+                  <div class="invalid-feedback d-block" style="color: #dc3545;">Name must be at least 3 characters</div>
+                }
+              }
+            </div>
+
+            <!-- Email Field -->
+            <div class="mb-3">
+              <label for="userEmail" class="form-label">Email</label>
+              <input 
+                type="email" 
+                id="userEmail"
+                class="form-control" 
+                formControlName="email"
+                [class.is-invalid]="addUserForm.get('email')?.invalid && addUserForm.get('email')?.touched">
+              @if (addUserForm.get('email')?.invalid && addUserForm.get('email')?.touched) {
+                @if (addUserForm.get('email')?.errors?.['required']) {
+                  <div class="invalid-feedback d-block" style="color: #dc3545;">Email is required</div>
+                }
+                @if (addUserForm.get('email')?.errors?.['email']) {
+                  <div class="invalid-feedback d-block" style="color: #dc3545;">Please enter a valid email address</div>
+                }
+              }
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="cancelAddUser()">Cancel</button>
+            <button type="button" class="btn btn-primary" (click)="submitAddUser()" [disabled]="addUserForm.invalid">Add User</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}

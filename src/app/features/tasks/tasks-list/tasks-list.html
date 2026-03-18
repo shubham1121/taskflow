@@ -1,1 +1,199 @@
-<p>tasks-list works!</p>
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Tasks</h1>
+        <button class="btn btn-primary" (click)="openTaskModal()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" style="margin-right: 0.5rem; vertical-align: middle;">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Add Task
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Assigned To</th>
+                    <th>Due Date</th>
+                    <th class="text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (task of tasks; track task.id) {
+                <tr>
+                    <td class="fw-medium">{{ task.title }}</td>
+                    <td>{{ task.description }}</td>
+                    <td>
+                        <span class="badge" [ngClass]="'bg-' + statusBadgeColor[task.status]">
+                            {{ task.status | titlecase }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge" [ngClass]="'bg-' + priorityBadgeColor[task.priority]">
+                            {{ task.priority | titlecase }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge bg-primary">User {{ task.assignedTo }}</span>
+                    </td>
+                    <td>{{ task.dueDate | date:'d MMMM y' }}</td>
+                    <td class="text-center">
+                        <div class="d-flex justify-content-center gap-2 align-items-center">
+
+                            <button class="btn btn-sm btn-danger" (click)="openTaskModal(task.id)"
+                                title="Edit task">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                </svg>
+                            </button>
+                            <button class="btn btn-sm btn-danger" (click)="openDeleteModal(task.id)"
+                                title="Delete task">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path
+                                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                    </path>
+                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+@if (isDeleteModalOpen) {
+<div class="modal d-block" tabindex="-1" role="dialog" style="background-color: rgba(0, 0, 0, 0.5);">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" (click)="cancelDelete()" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this task? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" (click)="cancelDelete()">Cancel</button>
+                <button type="button" class="btn btn-danger" (click)="confirmDelete()">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+}
+
+<!-- Add Task Modal -->
+@if (isTaskModalOpen) {
+<div class="modal d-block" tabindex="-1" role="dialog" style="background-color: rgba(0, 0, 0, 0.5);">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Task</h5>
+                <button type="button" class="btn-close" (click)="cancelTask()" aria-label="Close"></button>
+            </div>
+            <form [formGroup]="taskForm">
+                <div class="modal-body">
+                    <!-- Title Field -->
+                    <div class="mb-3">
+                        <label for="taskTitle" class="form-label">Title</label>
+                        <input type="text" id="taskTitle" class="form-control" formControlName="title"
+                            [class.is-invalid]="taskForm.get('title')?.invalid && taskForm.get('title')?.touched">
+                        @if (taskForm.get('title')?.invalid && taskForm.get('title')?.touched) {
+                        @if (taskForm.get('title')?.errors?.['required']) {
+                        <div class="invalid-feedback d-block" style="color: #dc3545;">Title is required</div>
+                        }
+                        @if (taskForm.get('title')?.errors?.['minlength']) {
+                        <div class="invalid-feedback d-block" style="color: #dc3545;">Title must be at least 3
+                            characters</div>
+                        }
+                        }
+                    </div>
+
+                    <!-- Description Field -->
+                    <div class="mb-3">
+                        <label for="taskDescription" class="form-label">Description</label>
+                        <textarea id="taskDescription" class="form-control" formControlName="description" rows="3"
+                            [class.is-invalid]="taskForm.get('description')?.invalid && taskForm.get('description')?.touched"></textarea>
+                        @if (taskForm.get('description')?.invalid && taskForm.get('description')?.touched) {
+                        @if (taskForm.get('description')?.errors?.['required']) {
+                        <div class="invalid-feedback d-block" style="color: #dc3545;">Description is required</div>
+                        }
+                        @if (taskForm.get('description')?.errors?.['minlength']) {
+                        <div class="invalid-feedback d-block" style="color: #dc3545;">Description must be at least 5
+                            characters</div>
+                        }
+                        }
+                    </div>
+
+                    <!-- Status Field -->
+                    <div class="mb-3">
+                        <label for="taskStatus" class="form-label">Status</label>
+                        <select id="taskStatus" class="form-select" formControlName="status"
+                            [class.is-invalid]="taskForm.get('status')?.invalid && taskForm.get('status')?.touched">
+                            <option [value]="TaskStatus.Todo">Todo</option>
+                            <option [value]="TaskStatus.InProgress">In Progress</option>
+                            <option [value]="TaskStatus.Done">Done</option>
+                        </select>
+                    </div>
+
+                    <!-- Priority Field -->
+                    <div class="mb-3">
+                        <label for="taskPriority" class="form-label">Priority</label>
+                        <select id="taskPriority" class="form-select" formControlName="priority"
+                            [class.is-invalid]="taskForm.get('priority')?.invalid && taskForm.get('priority')?.touched">
+                            <option [value]="TaskPriority.Low">Low</option>
+                            <option [value]="TaskPriority.Medium">Medium</option>
+                            <option [value]="TaskPriority.High">High</option>
+                        </select>
+                    </div>
+
+                    <!-- Due Date Field -->
+                    <div class="mb-3">
+                        <label for="taskDueDate" class="form-label">Due Date</label>
+                        <input type="date" id="taskDueDate" class="form-control" formControlName="dueDate"
+                            [class.is-invalid]="taskForm.get('dueDate')?.invalid && taskForm.get('dueDate')?.touched">
+                        @if (taskForm.get('dueDate')?.invalid && taskForm.get('dueDate')?.touched) {
+                        @if (taskForm.get('dueDate')?.errors?.['required']) {
+                        <div class="invalid-feedback d-block" style="color: #dc3545;">Due date is required</div>
+                        }
+                        }
+                    </div>
+
+                    <!-- Assigned To Field -->
+                    <div class="mb-3">
+                        <label for="taskAssignedTo" class="form-label">Assigned To</label>
+                        <select id="taskAssignedTo" class="form-select" formControlName="assignedTo"
+                            [class.is-invalid]="taskForm.get('assignedTo')?.invalid && taskForm.get('assignedTo')?.touched">
+                            <option [value]="1">User 1</option>
+                            <option [value]="2">User 2</option>
+                            <option [value]="3">User 3</option>
+                            <option [value]="4">User 4</option>
+                            <option [value]="5">User 5</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" (click)="cancelTask()">Cancel</button>
+                    <button type="button" class="btn btn-primary" (click)="submitTask()"
+                        [disabled]="taskForm.invalid"> {{ taskToEditId ? 'Update Task' : 'Add Task' }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+}
