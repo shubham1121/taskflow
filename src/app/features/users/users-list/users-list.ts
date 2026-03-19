@@ -44,8 +44,15 @@ export class UsersList implements OnInit, OnDestroy {
 
   confirmDelete(): void {
     if (this.userToDeleteId !== null) {
-      this.users = this.users.filter(user => user.id !== this.userToDeleteId);
-      this.closeDeleteModal();
+      this.usersFacadeService.deleteUser(this.userToDeleteId).subscribe(() => {
+        this.users = this.users.filter(user => user.id !== this.userToDeleteId);
+        this.toastService.showToast({
+          toastHeading: 'User Deleted',
+          toastMessage: `User with ID ${this.userToDeleteId} has been deleted successfully.`,
+          type: ToastType.Success
+        });
+        this.closeDeleteModal();
+      });
     }
   }
 

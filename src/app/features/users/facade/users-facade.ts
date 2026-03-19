@@ -38,10 +38,6 @@ export class UsersFacade implements OnDestroy {
         return this.usersApiService.deleteUser(id);
     }
 
-    updateUser(id: number, user: UserModel) {
-        return this.usersApiService.updateUser(id, user);
-    }
-
     ngOnDestroy(): void {
         this.destroy$.next();
         this.destroy$.complete();

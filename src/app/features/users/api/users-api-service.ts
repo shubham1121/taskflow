@@ -38,12 +38,6 @@ export class UsersApiService {
         );
     }
 
-    updateUser(id: number, user: UserModel): Observable<UserModel> {
-        return this.http.put<UserModel>(`${this.API_URL}/${id}`, user).pipe(
-            catchError(error => this.handleError(error))
-        );
-    }
-
     private handleError(error: any): Observable<never> {
         console.error('API Error:', error);
         this.apiErrorHandlerService.handleError(error);
