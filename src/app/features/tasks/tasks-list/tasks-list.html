@@ -31,16 +31,16 @@
                     <td>{{ task.description }}</td>
                     <td>
                         <span class="badge" [ngClass]="'bg-' + statusBadgeColor[task.status]">
-                            {{ task.status | titlecase }}
+                            {{ task.status | formatEnum }}
                         </span>
                     </td>
                     <td>
                         <span class="badge" [ngClass]="'bg-' + priorityBadgeColor[task.priority]">
-                            {{ task.priority | titlecase }}
+                            {{ task.priority | formatEnum }}
                         </span>
                     </td>
                     <td>
-                        <span class="badge bg-primary">User {{ task.assignedTo }}</span>
+                        <span class="badge bg-primary">{{ task.assignedUserName || '-' }}</span>
                     </td>
                     <td>{{ task.dueDate | date:'d MMMM y' }}</td>
                     <td class="text-center">
@@ -145,9 +145,9 @@
                         <label for="taskStatus" class="form-label">Status</label>
                         <select id="taskStatus" class="form-select" formControlName="status"
                             [class.is-invalid]="taskForm.get('status')?.invalid && taskForm.get('status')?.touched">
-                            <option [value]="TaskStatus.Todo">Todo</option>
-                            <option [value]="TaskStatus.InProgress">In Progress</option>
-                            <option [value]="TaskStatus.Done">Done</option>
+                            <option [value]="TaskStatus.TODO">Todo</option>
+                            <option [value]="TaskStatus.IN_PROGRESS">In Progress</option>
+                            <option [value]="TaskStatus.DONE">Done</option>
                         </select>
                     </div>
 
@@ -156,9 +156,9 @@
                         <label for="taskPriority" class="form-label">Priority</label>
                         <select id="taskPriority" class="form-select" formControlName="priority"
                             [class.is-invalid]="taskForm.get('priority')?.invalid && taskForm.get('priority')?.touched">
-                            <option [value]="TaskPriority.Low">Low</option>
-                            <option [value]="TaskPriority.Medium">Medium</option>
-                            <option [value]="TaskPriority.High">High</option>
+                            <option [value]="TaskPriority.LOW">Low</option>
+                            <option [value]="TaskPriority.MEDIUM">Medium</option>
+                            <option [value]="TaskPriority.HIGH">High</option>
                         </select>
                     </div>
 

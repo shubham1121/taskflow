@@ -7,10 +7,12 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { Task, TaskStatus, TaskPriority } from '../models/task.model';
+import { TasksFacade } from '../facade/tasks.facade';
+import { FormatEnumPipe } from '../../../shared/pipes/format-enum.pipe';
 
 @Component({
   selector: 'app-tasks-list',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormatEnumPipe],
   templateUrl: './tasks-list.html',
   styleUrl: './tasks-list.scss',
 })
@@ -24,60 +26,31 @@ export class TasksList implements OnInit {
   TaskStatus = TaskStatus;
   TaskPriority = TaskPriority;
   statusBadgeColor: { [key in TaskStatus]: string } = {
-    [TaskStatus.Todo]: 'secondary',
-    [TaskStatus.InProgress]: 'warning',
-    [TaskStatus.Done]: 'success',
+    [TaskStatus.TODO]: 'secondary',
+    [TaskStatus.IN_PROGRESS]: 'warning',
+    [TaskStatus.DONE]: 'success',
   };
   priorityBadgeColor: { [key in TaskPriority]: string } = {
-    [TaskPriority.Low]: 'info',
-    [TaskPriority.Medium]: 'warning',
-    [TaskPriority.High]: 'danger',
+    [TaskPriority.LOW]: 'info',
+    [TaskPriority.MEDIUM]: 'warning',
+    [TaskPriority.HIGH]: 'danger',
   };
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder, private readonly taskFacade: TasksFacade) {
     this.taskForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(3)]],
       description: ['', [Validators.required, Validators.minLength(5)]],
-      status: [TaskStatus.Todo, Validators.required],
-      priority: [TaskPriority.Medium, Validators.required],
+      status: [TaskStatus.TODO, Validators.required],
+      priority: [TaskPriority.MEDIUM, Validators.required],
       dueDate: ['', Validators.required],
       assignedTo: [1, Validators.required],
     });
   }
 
   ngOnInit(): void {
-    this.tasks = [
-      {
-        id: 1,
-        title: 'Design Dashboard',
-        description: 'Create UI mockups for the main dashboard',
-        status: TaskStatus.Done,
-        priority: TaskPriority.High,
-        dueDate: '2026-03-10',
-        createdAt: '2026-02-15',
-        assignedTo: 1,
-      },
-      {
-        id: 2,
-        title: 'Setup Database',
-        description: 'Configure MongoDB and create initial schemas',
-        status: TaskStatus.InProgress,
-        priority: TaskPriority.High,
-        dueDate: '2026-03-15',
-        createdAt: '2026-02-20',
-        assignedTo: 2,
-      },
-      {
-        id: 3,
-        title: 'Write Documentation',
-        description: 'Complete API documentation and user guides',
-        status: TaskStatus.Todo,
-        priority: TaskPriority.Medium,
-        dueDate: '2026-03-20',
-        createdAt: '2026-03-01',
-        assignedTo: 3,
-      },
-    ];
+    this.taskFacade.getAllTasks$.subscribe((tasks) => {
+      this.tasks = tasks;
+    });
   }
 
   openDeleteModal(id?: number): void {
@@ -118,8 +91,8 @@ export class TasksList implements OnInit {
     }
     this.taskForm.reset({
 
-      status: TaskStatus.Todo,
-      priority: TaskPriority.Medium,
+      status: TaskStatus.TODO,
+      priority: TaskPriority.MEDIUM,
       assignedTo: 1,
     });
   }
@@ -164,8 +137,8 @@ export class TasksList implements OnInit {
   private closeTaskModal(): void {
     this.isTaskModalOpen = false;
     this.taskForm.reset({
-      status: TaskStatus.Todo,
-      priority: TaskPriority.Medium,
+      status: TaskStatus.TODO,
+      priority: TaskPriority.MEDIUM,
       assignedTo: 1,
     });
   }

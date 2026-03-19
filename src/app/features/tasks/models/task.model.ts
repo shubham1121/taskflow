@@ -1,13 +1,13 @@
 export enum TaskStatus {
-  Todo = 'todo',
-  InProgress = 'in-progress',
-  Done = 'done'
+  TODO = 'TODO',
+  IN_PROGRESS = 'IN_PROGRESS',
+  DONE = 'DONE'
 }
 
 export enum TaskPriority {
-  Low = 'low',
-  Medium = 'medium',
-  High = 'high'
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH'
 }
 
 export interface Task {
@@ -19,4 +19,5 @@ export interface Task {
   dueDate: string;
   createdAt: string;
   assignedTo: number;
+  assignedUserName?: string;
 }
