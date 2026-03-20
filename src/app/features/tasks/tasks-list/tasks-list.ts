@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -9,6 +9,8 @@ import {
 import { Task, TaskStatus, TaskPriority } from '../models/task.model';
 import { TasksFacade } from '../facade/tasks.facade';
 import { FormatEnumPipe } from '../../../shared/pipes/format-enum.pipe';
+import { interval, startWith, Subject, Subscription, switchMap, takeUntil } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-tasks-list',
@@ -16,7 +18,9 @@ import { FormatEnumPipe } from '../../../shared/pipes/format-enum.pipe';
   templateUrl: './tasks-list.html',
   styleUrl: './tasks-list.scss',
 })
-export class TasksList implements OnInit {
+export class TasksList implements OnInit, OnDestroy {
+  private readonly pollingFreq = environment.tasksPollingFrequency;
+  private destroy$ = new Subject<void>();
   tasks: Task[] = [];
   isDeleteModalOpen = false;
   taskToDeleteId: number | null = null;
@@ -48,9 +52,19 @@ export class TasksList implements OnInit {
   }
 
   ngOnInit(): void {
-    this.taskFacade.getAllTasks$.subscribe((tasks) => {
-      this.tasks = tasks;
-    });
+    // Component owns the polling lifecycle - starts on init, stops on destroy
+    interval(this.pollingFreq).pipe(
+      startWith(0),
+      switchMap(() => this.taskFacade.fetchAndEnrichTasks((tasks) => {
+        this.tasks = tasks;
+      })),
+      takeUntil(this.destroy$),
+    ).subscribe();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   openDeleteModal(id?: number): void {

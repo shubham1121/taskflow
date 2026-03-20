@@ -1,107 +1,75 @@
-import { inject, Injectable, OnDestroy } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import {
-  BehaviorSubject,
   catchError,
   from,
-  interval,
   map,
   mergeMap,
+  Observable,
   of,
   scan,
-  startWith,
-  Subject,
   switchMap,
-  takeUntil,
   tap,
 } from 'rxjs';
 import { Task } from '../models/task.model';
-import { environment } from '../../../../environments/environment.prod';
 import { TasksApiService } from '../api/tasks-api-service';
 import { UsersFacade } from '../../users/facade/users-facade';
+import { UsersApiService } from '../../users/api/users-api-service';
 
 @Injectable({
   providedIn: 'root',
 })
-export class TasksFacade implements OnDestroy {
-  private readonly taskPolling = environment.tasksPollingFrequency;
+export class TasksFacade {
   private readonly tasksApiService = inject(TasksApiService);
-  private readonly usersFacade = inject(UsersFacade);
-  getAllTasksSubject = new BehaviorSubject<Task[]>([]);
-  getAllTasks$ = this.getAllTasksSubject.asObservable();
-  destroy$ = new Subject<void>();
+  private readonly usersApiService = inject(UsersApiService);
   private userIdCache = new Map<number, string>();
 
-  constructor() {
-    this.initializePolling();
-  }
-
-  private initializePolling() {
-    interval(this.taskPolling)
-      .pipe(
-        startWith(0),
-        switchMap(() => this.tasksApiService.getAllTasks()),
-        switchMap((tasks) => {
-          // Emit tasks with default names immediately
-          return of(tasks).pipe(
-            tap((defaultTasks) =>
-              this.getAllTasksSubject.next(defaultTasks),
-            ),
-            // Then enrich user names in background
-            switchMap(() =>
-              from(tasks).pipe(
-                mergeMap(
-                  (task) => this.enrichUserName(task),
-                  10, // Concurrency limit
-                ),
-                // Update each task as user name arrives
-                scan(
-                  (accumulator: Task[], enrichedTask: Task) => {
-                    const existingIndex = accumulator.findIndex(
-                      (t) => t.id === enrichedTask.id,
-                    );
-                    if (existingIndex > -1) {
-                      accumulator[existingIndex] = enrichedTask;
-                    } else {
-                      accumulator.push(enrichedTask);
-                    }
-                    return [...accumulator];
-                  },
-                  tasks,
-                ),
-                tap((updatedTasks) =>
-                  this.getAllTasksSubject.next(updatedTasks),
-                ),
-              ),
-            ),
-          );
-        }),
-        takeUntil(this.destroy$),
-      )
-      .subscribe();
-  }
-
-  private enrichUserName(task: Task) {
-    const cachedName = this.userIdCache.get(task.assignedTo);
-    if (cachedName) {
-      return of({ ...task, assignedUserName: cachedName });
-    }
-    return this.usersFacade.getUserById(task.assignedTo).pipe(
-      map((user) => {
-        this.userIdCache.set(task.assignedTo, user.name);
-        return { ...task, assignedUserName: user.name };
-      }),
-      catchError(() => {
-        return of({
-          ...task,
-          assignedUserName: `User ${task.assignedTo}`,
-        });
+  /**
+   * Fetches all tasks and enriches them with user names.
+   * Emits tasks immediately with default names, then updates as user names arrive.
+   * The component is responsible for calling this and managing the subscription lifecycle.
+   */
+  fetchAndEnrichTasks(onUpdate: (tasks: Task[]) => void): Observable<Task[]> {
+    return this.tasksApiService.getAllTasks().pipe(
+      switchMap((tasks) => {
+        // Emit tasks with assignedTo as default name immediately
+        onUpdate(tasks);
+        // Then enrich user names in background
+        return from(tasks).pipe(
+          mergeMap(
+            (task) => this.enrichUserName(task),
+            10, // Concurrency limit
+          ),
+          scan(
+            (accumulator: Task[], enrichedTask: Task) => {
+              const existingIndex = accumulator.findIndex(
+                (t) => t.id === enrichedTask.id,
+              );
+              if (existingIndex > -1) {
+                accumulator[existingIndex] = enrichedTask;
+              } else {
+                accumulator.push(enrichedTask);
+              }
+              return [...accumulator];
+            },
+            tasks,
+          ),
+          tap((updatedTasks) => onUpdate(updatedTasks)),
+        );
       }),
     );
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-    this.userIdCache.clear();
+  private enrichUserName(task: Task): Observable<Task> {
+    const cachedName = this.userIdCache.get(task.assignedTo);
+    if (cachedName) {
+      return of({ ...task, assignedUserName: cachedName });
+    }
+    return this.usersApiService.getUserById(task.assignedTo).pipe(
+      map((user) => {
+        this.userIdCache.set(task.assignedTo, user.name);
+        return { ...task, assignedUserName: user.name };
+      }),
+      catchError(() => of({ ...task, assignedUserName: 'Unassigned' })),
+    );
   }
 }

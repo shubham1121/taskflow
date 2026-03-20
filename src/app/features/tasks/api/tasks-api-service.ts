@@ -1,10 +1,9 @@
 import { inject, Injectable } from "@angular/core";
 import { Task } from "../models/task.model";
 import { HttpClient } from "@angular/common/http";
-import { BehaviorSubject, catchError, interval, Observable, throwError } from "rxjs";
+import { catchError, Observable, throwError } from "rxjs";
 import { ApiErrorHandlerService } from "../../../core/api-error-handler-service";
 import { environment } from "../../../../environments/environment";
-import { insertImport } from "@angular/cdk/schematics";
 
 @Injectable({
     providedIn: "root",
@@ -17,6 +16,12 @@ export class TasksApiService {
 
     getAllTasks() : Observable<Task[]> {
         return this.http.get<Task[]>(this.API_URL).pipe(
+            catchError(error => this.handleError(error))
+        );
+    }
+
+    getAllTasksByUserId(userId: number) : Observable<Task[]> {
+        return this.http.get<Task[]>(`${this.API_URL}/user/${userId}`).pipe(
             catchError(error => this.handleError(error))
         );
     }
