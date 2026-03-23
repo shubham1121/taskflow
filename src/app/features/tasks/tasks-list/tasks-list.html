@@ -179,11 +179,9 @@
                         <label for="taskAssignedTo" class="form-label">Assigned To</label>
                         <select id="taskAssignedTo" class="form-select" formControlName="assignedTo"
                             [class.is-invalid]="taskForm.get('assignedTo')?.invalid && taskForm.get('assignedTo')?.touched">
-                            <option [value]="1">User 1</option>
-                            <option [value]="2">User 2</option>
-                            <option [value]="3">User 3</option>
-                            <option [value]="4">User 4</option>
-                            <option [value]="5">User 5</option>
+                            @for (user of users | keyvalue; track user.key) {
+                                <option [value]="user.key">{{ user.value }}</option>
+                            }
                         </select>
                     </div>
                 </div>

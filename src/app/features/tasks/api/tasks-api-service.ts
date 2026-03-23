@@ -32,13 +32,13 @@ export class TasksApiService {
         );
     }
 
-    updateTask(taskId: string, updatedTask: Task) : Observable<Task> {
+    updateTask(taskId: number, updatedTask: Task) : Observable<Task> {
         return this.http.put<Task>(`${this.API_URL}/${taskId}`, updatedTask).pipe(
             catchError(error => this.handleError(error))
         );
     }
 
-    deleteTask(taskId: string) : Observable<void> {
+    deleteTask(taskId: number) : Observable<void> {
         return this.http.delete<void>(`${this.API_URL}/${taskId}`).pipe(
             catchError(error => this.handleError(error))
         );

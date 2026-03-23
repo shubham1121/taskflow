@@ -11,6 +11,7 @@ import { TasksFacade } from '../facade/tasks.facade';
 import { FormatEnumPipe } from '../../../shared/pipes/format-enum.pipe';
 import { interval, startWith, Subject, Subscription, switchMap, takeUntil } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { UsersList } from '../../users/users-list/users-list';
 
 @Component({
   selector: 'app-tasks-list',
@@ -22,6 +23,7 @@ export class TasksList implements OnInit, OnDestroy {
   private readonly pollingFreq = environment.tasksPollingFrequency;
   private destroy$ = new Subject<void>();
   tasks: Task[] = [];
+  users: Map<number, string> = new Map();
   isDeleteModalOpen = false;
   taskToDeleteId: number | null = null;
   taskToEditId: number | null = null;
@@ -57,6 +59,7 @@ export class TasksList implements OnInit, OnDestroy {
       startWith(0),
       switchMap(() => this.taskFacade.fetchAndEnrichTasks((tasks) => {
         this.tasks = tasks;
+        this.users = this.taskFacade.users;
       })),
       takeUntil(this.destroy$),
     ).subscribe();
@@ -74,7 +77,12 @@ export class TasksList implements OnInit, OnDestroy {
 
   confirmDelete(): void {
     if (this.taskToDeleteId !== null) {
-      this.tasks = this.tasks.filter((task) => task.id !== this.taskToDeleteId);
+      this.taskFacade.deleteTask(this.taskToDeleteId).subscribe(() => {
+        this.tasks = this.tasks.filter((task) => task.id !== this.taskToDeleteId);
+        this.closeDeleteModal();
+      });
+    } else {
+      console.error('No task ID specified for deletion.');
       this.closeDeleteModal();
     }
   }
@@ -106,7 +114,7 @@ export class TasksList implements OnInit, OnDestroy {
     this.taskForm.reset({
 
       status: TaskStatus.TODO,
-      priority: TaskPriority.MEDIUM,
+      priority: TaskPriority.LOW,
       assignedTo: 1,
     });
   }
@@ -140,11 +148,17 @@ export class TasksList implements OnInit, OnDestroy {
           priority: formValue.priority,
           dueDate: formValue.dueDate,
           createdAt: new Date().toISOString().split('T')[0],
-          assignedTo: formValue.assignedTo,
+          assignedTo: Number(formValue.assignedTo),
         };
-        this.tasks.push(newTask);
+        this.taskFacade.createTask(newTask).subscribe({
+          next: (createdTask) => {
+            if (createdTask) {
+              this.tasks.push(createdTask);
+              this.closeTaskModal();
+            }
+          }
+        });
       }
-      this.closeTaskModal();
     }
   }
 

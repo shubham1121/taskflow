@@ -12,7 +12,6 @@ import {
 } from 'rxjs';
 import { Task } from '../models/task.model';
 import { TasksApiService } from '../api/tasks-api-service';
-import { UsersFacade } from '../../users/facade/users-facade';
 import { UsersApiService } from '../../users/api/users-api-service';
 
 @Injectable({
@@ -21,7 +20,33 @@ import { UsersApiService } from '../../users/api/users-api-service';
 export class TasksFacade {
   private readonly tasksApiService = inject(TasksApiService);
   private readonly usersApiService = inject(UsersApiService);
-  private userIdCache = new Map<number, string>();
+  private userIdCache = new Map<number,  string>();
+
+  get users() : Map<number, string> {
+    return this.userIdCache;
+  }
+
+  createTask(task: Task): Observable<Task> {
+    return this.tasksApiService.createTask(task).pipe(
+      map((createdTask) => {
+        createdTask.assignedUserName = this.userIdCache.get(createdTask.assignedTo) || 'Unassigned';
+        return createdTask;
+      }),
+      catchError((error) => {
+        console.error('Error creating task:', error);
+        return of(null as unknown as Task);
+      }),
+    );
+  }
+
+  deleteTask(taskId: number): Observable<void> {
+    return this.tasksApiService.deleteTask(taskId).pipe(
+      catchError((error) => {
+        console.error('Error deleting task:', error);
+        return of(undefined);
+      }
+    ));
+  }
 
   /**
    * Fetches all tasks and enriches them with user names.
