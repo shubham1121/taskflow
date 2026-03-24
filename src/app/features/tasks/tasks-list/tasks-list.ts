@@ -112,7 +112,6 @@ export class TasksList implements OnInit, OnDestroy {
       return;
     }
     this.taskForm.reset({
-
       status: TaskStatus.TODO,
       priority: TaskPriority.LOW,
       assignedTo: 1,
@@ -127,18 +126,27 @@ export class TasksList implements OnInit, OnDestroy {
     if (this.taskForm.valid) {
       const formValue = this.taskForm.value;
       if (this.taskToEditId) {
-        const taskIndex = this.tasks.findIndex((t) => t.id === this.taskToEditId);
-        if (taskIndex !== -1) {
-          this.tasks[taskIndex] = {
-            id: this.taskToEditId,
-            title: formValue.title,
-            description: formValue.description,
-            status: formValue.status,
-            priority: formValue.priority,
-            dueDate: formValue.dueDate,
-            createdAt: this.tasks[taskIndex].createdAt,
-            assignedTo: formValue.assignedTo,
-          };
+        const existingTask = this.tasks.find((t) => t.id === this.taskToEditId);
+        const taskToUpdate: Task = {
+          id: this.taskToEditId,
+          title: formValue.title,
+          description: formValue.description,
+          status: formValue.status,
+          priority: formValue.priority,
+          dueDate: formValue.dueDate,
+          createdAt: existingTask?.createdAt || new Date().toISOString().split('T')[0],
+          assignedTo: Number(formValue.assignedTo),
+        };
+        if (existingTask) {
+          this.taskFacade.updateTask(taskToUpdate).subscribe((updatedTask) => {
+            if (updatedTask) {
+              const taskIndex = this.tasks.findIndex((t) => t.id === this.taskToEditId);
+              if (taskIndex !== -1) {
+                this.tasks[taskIndex] = updatedTask;
+              }
+              this.closeTaskModal();
+            }
+          });
         }
       } else {
         const newTask: Task = {

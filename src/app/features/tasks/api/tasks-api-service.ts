@@ -32,8 +32,8 @@ export class TasksApiService {
         );
     }
 
-    updateTask(taskId: number, updatedTask: Task) : Observable<Task> {
-        return this.http.put<Task>(`${this.API_URL}/${taskId}`, updatedTask).pipe(
+    updateTask(updatedTask: Task) : Observable<Task> {
+        return this.http.put<Task>(`${this.API_URL}`, updatedTask).pipe(
             catchError(error => this.handleError(error))
         );
     }

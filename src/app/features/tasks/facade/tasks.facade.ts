@@ -48,6 +48,19 @@ export class TasksFacade {
     ));
   }
 
+  updateTask(task: Task): Observable<Task> {
+    return this.tasksApiService.updateTask(task).pipe(
+      map((updatedTask) => {
+        updatedTask.assignedUserName = this.userIdCache.get(updatedTask.assignedTo) || 'Unassigned';
+        return updatedTask;
+      }),
+      catchError((error) => {
+        console.error('Error updating task:', error);
+        return of(null as unknown as Task);
+      }),
+    );
+  }
+
   /**
    * Fetches all tasks and enriches them with user names.
    * Emits tasks immediately with default names, then updates as user names arrive.
