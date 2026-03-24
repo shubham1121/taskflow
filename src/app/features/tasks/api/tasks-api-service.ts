@@ -1,5 +1,5 @@
 import { inject, Injectable } from "@angular/core";
-import { Task } from "../models/task.model";
+import { Task, TaskPriority, TaskStatus } from "../models/task.model";
 import { HttpClient } from "@angular/common/http";
 import { catchError, Observable, throwError } from "rxjs";
 import { ApiErrorHandlerService } from "../../../core/api-error-handler-service";
@@ -40,6 +40,18 @@ export class TasksApiService {
 
     deleteTask(taskId: number) : Observable<void> {
         return this.http.delete<void>(`${this.API_URL}/${taskId}`).pipe(
+            catchError(error => this.handleError(error))
+        );
+    }
+
+    getTaskStatusCount() : Observable<Record<TaskStatus, number>> {
+        return this.http.get<Record<TaskStatus, number>>(`${this.API_URL}/count?groupBy=status`).pipe(
+            catchError(error => this.handleError(error))
+        );
+    }
+
+    getTaskPriorityCount() : Observable<Record<TaskPriority, number>> {
+        return this.http.get<Record<TaskPriority, number>>(`${this.API_URL}/count?groupBy=priority`).pipe(
             catchError(error => this.handleError(error))
         );
     }
