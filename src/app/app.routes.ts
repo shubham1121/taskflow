@@ -16,16 +16,16 @@ export const routes: Routes = [
             },
             {
                 path: 'tasks',
-                loadChildren: () => {
-                    return import('./features/tasks/tasks.routes').
-                        then(m => m.TASKS_ROUTES);
+                loadComponent: () => {
+                    return import('./features/tasks/tasks-list/tasks-list').
+                        then(c => c.TasksList);
                 }
             },
             {
                 path: 'users',
-                loadChildren: () => {
-                    return import('./features/users/users.routes').
-                        then(m => m.USERS_ROUTES);
+                loadComponent: () => {
+                    return import('./features/users/users-list/users-list').
+                        then(c => c.UsersList);
                 }
             }
         ]
