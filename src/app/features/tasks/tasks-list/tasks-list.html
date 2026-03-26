@@ -25,7 +25,7 @@
                 </tr>
             </thead>
             <tbody>
-                @for (task of tasks; track task.id) {
+                @for (task of allTasksComputed(); track task.id) {
                 <tr>
                     <td class="fw-medium">{{ task.title }}</td>
                     <td>{{ task.description }}</td>

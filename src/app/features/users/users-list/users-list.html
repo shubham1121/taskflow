@@ -20,7 +20,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (user of users; track user.id) {
+        @for (user of allUsersComputed(); track user.id) {
           <tr>
             <td class="fw-medium">{{ user.name }}</td>
             <td>{{ user.email }}</td>

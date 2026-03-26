@@ -1,29 +1,54 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, OnDestroy, signal } from '@angular/core';
 import {
   catchError,
   from,
+  interval,
   map,
+  merge,
   mergeMap,
   Observable,
   of,
   scan,
+  startWith,
+  Subject,
   switchMap,
+  takeUntil,
   tap,
 } from 'rxjs';
 import { Task } from '../models/task.model';
 import { TasksApiService } from '../api/tasks-api-service';
 import { UsersApiService } from '../../users/api/users-api-service';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
-export class TasksFacade {
+export class TasksFacade implements OnDestroy {
+  private readonly pollingFreq = environment.tasksPollingFrequency;
+  private destroy$ = new Subject<void>();
+  private refresh$ = new Subject<void>();
   private readonly tasksApiService = inject(TasksApiService);
   private readonly usersApiService = inject(UsersApiService);
   private userIdCache = new Map<number,  string>();
 
+  allTasksSignal = signal<Task[]>([]);
+
+  constructor() {
+    this.initializePollingTasks();
+  }
+
   get users() : Map<number, string> {
     return this.userIdCache;
+  }
+
+  initializePollingTasks(): void {
+    const polling$ = interval(this.pollingFreq).pipe(
+      startWith(0),
+    );
+    merge(polling$, this.refresh$).pipe(
+      switchMap(() => this.fetchAndEnrichTasks()),
+      takeUntil(this.destroy$),
+    ).subscribe();
   }
 
   createTask(task: Task): Observable<Task> {
@@ -31,6 +56,9 @@ export class TasksFacade {
       map((createdTask) => {
         createdTask.assignedUserName = this.userIdCache.get(createdTask.assignedTo) || 'Unassigned';
         return createdTask;
+      }),
+      tap(() => {
+        this.refresh$.next();
       }),
       catchError((error) => {
         console.error('Error creating task:', error);
@@ -41,11 +69,14 @@ export class TasksFacade {
 
   deleteTask(taskId: number): Observable<void> {
     return this.tasksApiService.deleteTask(taskId).pipe(
+      tap(() => {
+        this.refresh$.next();
+      }),
       catchError((error) => {
         console.error('Error deleting task:', error);
         return of(undefined);
-      }
-    ));
+      })
+    );
   }
 
   updateTask(task: Task): Observable<Task> {
@@ -53,6 +84,9 @@ export class TasksFacade {
       map((updatedTask) => {
         updatedTask.assignedUserName = this.userIdCache.get(updatedTask.assignedTo) || 'Unassigned';
         return updatedTask;
+      }),
+      tap(() => {
+        this.refresh$.next();
       }),
       catchError((error) => {
         console.error('Error updating task:', error);
@@ -66,11 +100,11 @@ export class TasksFacade {
    * Emits tasks immediately with default names, then updates as user names arrive.
    * The component is responsible for calling this and managing the subscription lifecycle.
    */
-  fetchAndEnrichTasks(onUpdate: (tasks: Task[]) => void): Observable<Task[]> {
+  fetchAndEnrichTasks(): Observable<Task[]> {
     return this.tasksApiService.getAllTasks().pipe(
       switchMap((tasks) => {
         // Emit tasks with assignedTo as default name immediately
-        onUpdate(tasks);
+        this.allTasksSignal.set(tasks);
         // Then enrich user names in background
         return from(tasks).pipe(
           mergeMap(
@@ -91,7 +125,7 @@ export class TasksFacade {
             },
             tasks,
           ),
-          tap((updatedTasks) => onUpdate(updatedTasks)),
+          tap((updatedTasks) => this.allTasksSignal.set(updatedTasks)),
         );
       }),
     );
@@ -109,5 +143,10 @@ export class TasksFacade {
       }),
       catchError(() => of({ ...task, assignedUserName: 'Unassigned' })),
     );
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

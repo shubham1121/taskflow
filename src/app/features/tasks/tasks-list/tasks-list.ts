@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -9,9 +9,6 @@ import {
 import { Task, TaskStatus, TaskPriority } from '../models/task.model';
 import { TasksFacade } from '../facade/tasks.facade';
 import { FormatEnumPipe } from '../../../shared/pipes/format-enum.pipe';
-import { interval, startWith, Subject, Subscription, switchMap, takeUntil } from 'rxjs';
-import { environment } from '../../../../environments/environment';
-import { UsersList } from '../../users/users-list/users-list';
 
 @Component({
   selector: 'app-tasks-list',
@@ -19,11 +16,9 @@ import { UsersList } from '../../users/users-list/users-list';
   templateUrl: './tasks-list.html',
   styleUrl: './tasks-list.scss',
 })
-export class TasksList implements OnInit, OnDestroy {
-  private readonly pollingFreq = environment.tasksPollingFrequency;
-  private destroy$ = new Subject<void>();
-  tasks: Task[] = [];
-  users: Map<number, string> = new Map();
+export class TasksList {
+  private readonly taskFacade = inject(TasksFacade);
+  allTasksComputed = computed(() => this.taskFacade.allTasksSignal());
   isDeleteModalOpen = false;
   taskToDeleteId: number | null = null;
   taskToEditId: number | null = null;
@@ -42,7 +37,7 @@ export class TasksList implements OnInit, OnDestroy {
     [TaskPriority.HIGH]: 'danger',
   };
 
-  constructor(private fb: FormBuilder, private readonly taskFacade: TasksFacade) {
+  constructor(private fb: FormBuilder) {
     this.taskForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(3)]],
       description: ['', [Validators.required, Validators.minLength(5)]],
@@ -53,23 +48,6 @@ export class TasksList implements OnInit, OnDestroy {
     });
   }
 
-  ngOnInit(): void {
-    // Component owns the polling lifecycle - starts on init, stops on destroy
-    interval(this.pollingFreq).pipe(
-      startWith(0),
-      switchMap(() => this.taskFacade.fetchAndEnrichTasks((tasks) => {
-        this.tasks = tasks;
-        this.users = this.taskFacade.users;
-      })),
-      takeUntil(this.destroy$),
-    ).subscribe();
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
   openDeleteModal(id?: number): void {
     this.taskToDeleteId = id!;
     this.isDeleteModalOpen = true;
@@ -78,7 +56,6 @@ export class TasksList implements OnInit, OnDestroy {
   confirmDelete(): void {
     if (this.taskToDeleteId !== null) {
       this.taskFacade.deleteTask(this.taskToDeleteId).subscribe(() => {
-        this.tasks = this.tasks.filter((task) => task.id !== this.taskToDeleteId);
         this.closeDeleteModal();
       });
     } else {
@@ -100,7 +77,7 @@ export class TasksList implements OnInit, OnDestroy {
     this.isTaskModalOpen = true;
     if (id) {
       this.taskToEditId = id;
-      const task = this.tasks.find((t) => t.id === id);
+      const task = this.allTasksComputed().find((t) => t.id === id);
       this.taskForm.setValue({
         title: task!.title,
         description: task!.description,
@@ -126,7 +103,7 @@ export class TasksList implements OnInit, OnDestroy {
     if (this.taskForm.valid) {
       const formValue = this.taskForm.value;
       if (this.taskToEditId) {
-        const existingTask = this.tasks.find((t) => t.id === this.taskToEditId);
+        const existingTask = this.allTasksComputed().find((t) => t.id === this.taskToEditId);
         const taskToUpdate: Task = {
           id: this.taskToEditId,
           title: formValue.title,
@@ -138,14 +115,8 @@ export class TasksList implements OnInit, OnDestroy {
           assignedTo: Number(formValue.assignedTo),
         };
         if (existingTask) {
-          this.taskFacade.updateTask(taskToUpdate).subscribe((updatedTask) => {
-            if (updatedTask) {
-              const taskIndex = this.tasks.findIndex((t) => t.id === this.taskToEditId);
-              if (taskIndex !== -1) {
-                this.tasks[taskIndex] = updatedTask;
-              }
+          this.taskFacade.updateTask(taskToUpdate).subscribe(() => {
               this.closeTaskModal();
-            }
           });
         }
       } else {
@@ -158,13 +129,8 @@ export class TasksList implements OnInit, OnDestroy {
           createdAt: new Date().toISOString().split('T')[0],
           assignedTo: Number(formValue.assignedTo),
         };
-        this.taskFacade.createTask(newTask).subscribe({
-          next: (createdTask) => {
-            if (createdTask) {
-              this.tasks.push(createdTask);
-              this.closeTaskModal();
-            }
-          }
+        this.taskFacade.createTask(newTask).subscribe(() => {
+          this.closeTaskModal();
         });
       }
     }
