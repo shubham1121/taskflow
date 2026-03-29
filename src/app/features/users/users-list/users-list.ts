@@ -1,9 +1,8 @@
-import { Component, computed, inject, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { UserModel } from '../models/users-model';
 import { UsersFacade } from '../facade/users-facade';
-import { Subscription } from 'rxjs';
 import { ToastHandler } from '../../../core/toast-handler-service';
 import { ToastType } from '../../../shared/constants/toast-type.enum';
 
@@ -12,6 +11,7 @@ import { ToastType } from '../../../shared/constants/toast-type.enum';
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './users-list.html',
   styleUrl: './users-list.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UsersList {
   private fb = inject(FormBuilder);

@@ -1,6 +1,7 @@
 import { inject, Injectable, OnDestroy, signal } from '@angular/core';
 import {
   catchError,
+  exhaustMap,
   from,
   interval,
   map,
@@ -46,7 +47,7 @@ export class TasksFacade implements OnDestroy {
       startWith(0),
     );
     merge(polling$, this.refresh$).pipe(
-      switchMap(() => this.fetchAndEnrichTasks()),
+      exhaustMap(() => this.fetchAndEnrichTasks()),
       takeUntil(this.destroy$),
     ).subscribe();
   }

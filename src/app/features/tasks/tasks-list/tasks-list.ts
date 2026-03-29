@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -9,16 +9,20 @@ import {
 import { Task, TaskStatus, TaskPriority } from '../models/task.model';
 import { TasksFacade } from '../facade/tasks.facade';
 import { FormatEnumPipe } from '../../../shared/pipes/format-enum.pipe';
+import { UsersFacade } from '../../users/facade/users-facade';
 
 @Component({
   selector: 'app-tasks-list',
   imports: [CommonModule, ReactiveFormsModule, FormatEnumPipe],
   templateUrl: './tasks-list.html',
   styleUrl: './tasks-list.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TasksList {
   private readonly taskFacade = inject(TasksFacade);
+  private readonly userFacade = inject(UsersFacade);
   allTasksComputed = computed(() => this.taskFacade.allTasksSignal());
+  users = computed(() => this.userFacade.allUsers());
   isDeleteModalOpen = false;
   taskToDeleteId: number | null = null;
   taskToEditId: number | null = null;
