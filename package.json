@@ -4,6 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "rimraf ./.angular && ng serve",
+    "start:prod": "rimraf ./.angular && ng serve --configuration production",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
