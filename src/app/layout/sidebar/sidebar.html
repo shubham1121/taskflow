@@ -25,8 +25,7 @@
             routerLinkActive="active"
             [routerLinkActiveOptions]="{ exact: item.exact }"
             class="nav-link"
-            [title]="item.label"
-            (click)="closeSidebarOnMobile()">
+            [title]="item.label">
             <span class="nav-icon" [innerHTML]="item.svgIcon"></span>
             <span class="nav-label">{{ item.label }}</span>
           </a>
